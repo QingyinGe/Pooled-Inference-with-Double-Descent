@@ -4,7 +4,7 @@
  
 1. Please install RStudio and then double click the 'Pool Inference.Rproj' file to open the project. It automatically sets the right working directory.
 
-2. Then download [ScaledData.zip]() and unzip it within this folder.
+2. Then download [ScaledData.zip](https://www.dropbox.com/scl/fi/ksoq9fi3azf4wotg01ipv/ScaledData.zip?rlkey=ucb844sjoug56aq1aiejyw2l2&st=bw4xu5tt&dl=0) and unzip it within this folder.
 
 3. Finally, run the code according to the README file in the Code folder.
 
