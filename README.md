@@ -1,4 +1,4 @@
-## Code for Paper 'The Paradox of Pooled Inference: Strong Forecast Aggregation Performance Despite a Heavy Estimation Burden'
+## Code for Paper 'Why Can Pooled Forecast Aggregation with Many Parameters Substantially Outperform Simple Averaging under Limited Data?'
 
 **Please follow the steps below to replicate the results.**
  
