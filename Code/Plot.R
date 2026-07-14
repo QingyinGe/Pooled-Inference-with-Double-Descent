@@ -4,7 +4,9 @@ library(patchwork)
 library(tidyverse)
 source("Code/func.R")
 
-ylim_upper = 7
+ylim_upper = 10
+ylim_lower = 0.1
+
 
 theme_slides = theme(text=element_text(size=15),
                      legend.position = "top")
@@ -28,19 +30,32 @@ df4plot_long$Method = factor(df4plot_long$Method,
 
 # Figure 2
 plot_monthly1 = ggplot(df4plot_long%>% filter(Method == "S:EW", dataset == "Monthly1"), aes(x = Method, y = Ratio)) +
-  geom_boxplot(outlier.alpha = 0.05, width = 0.3) + coord_cartesian(ylim = c(0,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
-  theme_bw() + ylab("Loss Ratio (EW/Ours)") + theme_slides + #theme(text=element_text(size=25), legend.position = "top") + 
-  scale_x_discrete(breaks = NULL) + scale_y_continuous(breaks = 0:7) # Removes x-axis labels and ticks
+  geom_boxplot(outlier.alpha = 0.05, width = 0.3) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
+  theme_bw() + ylab("Loss Ratio (EW/Ours)") + xlab("") + theme_slides + #theme(text=element_text(size=25), legend.position = "top") + 
+  scale_x_discrete(breaks = NULL) + 
+  # scale_y_continuous(breaks = 0:7)  + # Removes x-axis labels and ticks
+  scale_y_log10() + 
+  annotation_logticks(sides = "l")
 
 print(plot_monthly1)
 
+pdf("Figures/Figure2.pdf")
+print(plot_monthly1)
+dev.off()
 
 # Figure 4
 plot1 = ggplot(df4plot_long %>% filter(Method %in% separate_methods), aes(x = Method, y = Ratio)) +
-  geom_boxplot(outlier.alpha = 0.05) + coord_cartesian(ylim = c(0,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
-  theme_bw() + theme_slides + ylab("Loss Ratio (Benchmarks/P:Ridgeless)") + xlab("Benchmarks") + scale_y_continuous(breaks = 0:7) #ggtitle("Overall") 
+  geom_boxplot(outlier.alpha = 0.05) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
+  theme_bw() + theme_slides + ylab("Loss Ratio (Benchmarks/P:Ridgeless)") + xlab("Benchmarks") + 
+  # scale_y_continuous(breaks = 0:7) + #ggtitle("Overall") 
+  scale_y_log10() + 
+  annotation_logticks(sides = "l")
 
 print(plot1)
+
+pdf("Figures/Figure4.pdf")
+print(plot1)
+dev.off()
 
 # Figure 5
 df4plot_long = df4plot_long %>% filter(dataset %in% c(paste0("Monthly",1:7), "Daily1"))
@@ -53,8 +68,29 @@ df4plot_long$dataset = factor(df4plot_long$dataset,
                                          "(g) Monthly6, #Pooled = 1225", "(h) Monthly7, #Pooled = 1048"))
 
 plot_top8 = ggplot(df4plot_long %>% filter(Method %in% separate_methods), aes(x = Method, y = Ratio)) +
-  geom_boxplot(outlier.alpha = 0.2) + coord_cartesian(ylim = c(0,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
-  theme_bw() + theme(legend.position = "top") + theme_slides + ylab("Loss Ratio (Benchmarks/P:Ridgeless)") + xlab("Benchmarks") + scale_y_continuous(breaks = 0:7)
-
+  geom_boxplot(outlier.alpha = 0.2) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') + 
+  theme_bw() + theme(legend.position = "top") + theme_slides + ylab("Loss Ratio (Benchmarks/P:Ridgeless)") + xlab("Benchmarks") + 
+  # scale_y_continuous(breaks = 0:7)
+  scale_y_log10() + 
+  annotation_logticks(sides = "l")
 
 print(plot_top8 + facet_wrap(~ dataset, nrow = 4))
+
+pdf("Figures/Figure5.pdf")
+print(plot_top8 + facet_wrap(~ dataset, nrow = 4))
+dev.off()
+
+# Figure EC1: P:Linear vs P:Ridgeless (Overall, all datasets)
+plot_linear_overall = ggplot(df4plot_long %>% filter(Method == "P:Linear"), aes(x = Method, y = Ratio)) +
+  geom_boxplot(outlier.alpha = 0.05, width = 0.3) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') +
+  theme_bw() + ylab("Loss Ratio (P:Linear/P:Ridgeless)") + theme_slides +
+  scale_x_discrete(breaks = NULL) +
+  scale_y_log10() + 
+  annotation_logticks(sides = "l")
+
+print(plot_linear_overall)
+
+pdf("Figures/FigureEC1.pdf")
+print(plot_linear_overall) 
+dev.off()
+
