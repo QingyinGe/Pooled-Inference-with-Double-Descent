@@ -98,8 +98,8 @@ pdf("Figures/Figure5.pdf")
 print(plot_top8 + facet_wrap(~ dataset, nrow = 4))
 dev.off()
 
-# Figure EC1: P:Linear vs P:Ridgeless (Overall, all datasets)
-plot_linear_overall = ggplot(df4plot_long %>% filter(Method %in% c("P:Linear", "P:PCR80", "P:PCR70") & dataset != 'Hourly1'),
+# Figure EC1: P:Linear vs P:Ridgeless (M4 datasets)
+plot_linear_overall = ggplot(df4plot_long %>% filter(Method %in% c("P:Linear") & dataset != 'Hourly1'),
                              aes(x = Method, y = Ratio)) +
   geom_boxplot(outlier.alpha = 0.05, width = 0.3) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') +
   theme_bw() + ylab("Loss Ratio (Pooled Methods/P:Ridgeless)") + theme_slides +
@@ -110,5 +110,20 @@ plot_linear_overall = ggplot(df4plot_long %>% filter(Method %in% c("P:Linear", "
 print(plot_linear_overall)
 
 pdf("Figures/FigureEC1.pdf")
+print(plot_linear_overall) 
+dev.off()
+
+# Figure: P:PCR vs P:Ridgeless (M4 datasets)
+plot_linear_overall = ggplot(df4plot_long %>% filter(Method %in% c("P:PCR80", "P:PCR70") & dataset != 'Hourly1'),
+                             aes(x = Method, y = Ratio)) +
+  geom_boxplot(outlier.alpha = 0.05, width = 0.3) + coord_cartesian(ylim = c(ylim_lower,ylim_upper)) + geom_hline(yintercept = 1, col = 'red') +
+  theme_bw() + ylab("Loss Ratio (Pooled Methods/P:Ridgeless)") + theme_slides +
+  scale_x_discrete() +
+  scale_y_log10() + 
+  annotation_logticks(sides = "l")
+
+print(plot_linear_overall)
+
+pdf("Figures/M4PCR.pdf")
 print(plot_linear_overall) 
 dev.off()
