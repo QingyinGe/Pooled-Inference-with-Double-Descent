@@ -72,7 +72,7 @@ getRidge0TestErr = function(X_train, Y_train, X_test, Y_test, stdize = TRUE, n_e
   
   err_test = Y_test - t(t(Y_pred) + y_mu_train)
   
-  matrix(err_test, ncol = 1)
+  t(as.matrix(err_test))
 }
 
 getRidge0TestErrSim = function(X_train, Y_train, X_test, Y_test, stdize = TRUE, n_experts = 17){
