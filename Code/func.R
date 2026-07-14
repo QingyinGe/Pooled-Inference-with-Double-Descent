@@ -115,7 +115,7 @@ getRidge0TestErrSim = function(X_train, Y_train, X_test, Y_test, stdize = TRUE, 
   t(as.matrix(err_test))
 }
 
-getPCRTestErr = function(X_train, Y_train, X_test, Y_test, threshold = 0.75){
+getPCRTestErr = function(X_train, Y_train, X_test, Y_test, threshold = 0.8){
   n_train = nrow(Y_train)
   n_variable = ncol(Y_train)
   n_covariates = ncol(X_train)
@@ -139,7 +139,12 @@ getPCRTestErr = function(X_train, Y_train, X_test, Y_test, threshold = 0.75){
   PCA_idx = 1:min(which(pct_sum > threshold))
   # non_zero_idx = 1:(n_train-1)
   
-  VDinv = svd_train$v[,PCA_idx,drop = FALSE] %*% diag(1/svd_train$d[PCA_idx])
+  if(length(PCA_idx) >1){
+    VDinv = svd_train$v[,PCA_idx,drop = FALSE] %*% diag(1/svd_train$d[PCA_idx])
+  }else{
+    VDinv = svd_train$v[,PCA_idx,drop = FALSE]/svd_train$d[PCA_idx]
+  }
+  
   UTY = t(svd_train$u[,PCA_idx]) %*% Y_train_demean #demean or without demean generates the same solution
   
   # VDinv %*% UTY could be replaced by t(X_train_scaled) %*% ginv(X_train_scaled %*% t(X_train_scaled)) %*% Y_train_demean
