@@ -86,6 +86,15 @@ r2_df_flu$Season = factor(r2_df_flu$Season, levels = seasons)
 save(r2_df_flu, file = "Result/FluGoodnessOfFit_bySeason.RData")
 write.csv(r2_df_flu, "Result/FluGoodnessOfFit_bySeason.csv", row.names = FALSE)
 
+# Summary table: observations (n_experts x n_prods x weeks), variables
+# (n_prods, i.e. HHS regions), and adjusted R^2, one row per season.
+summary_table = r2_df_flu %>%
+  transmute(Season, Observations = n_experts * n_prods * n_periods,
+            Variables = n_prods, adjR2 = round(adjR2, 3))
+
+print(summary_table)
+write.csv(summary_table, "Result/FluGoodnessOfFit_summaryTable.csv", row.names = FALSE)
+
 # Bar chart: one adjusted R^2 per season (a boxplot doesn't apply here since
 # there's only a single number per season, not a distribution).
 p_bar = ggplot(r2_df_flu, aes(x = Season, y = adjR2)) +
@@ -138,11 +147,11 @@ rownames(r2_df_m4) = NULL
 save(r2_df_m4, file = "Result/M4GoodnessOfFit_70scenarios.RData")
 write.csv(r2_df_m4, "Result/M4GoodnessOfFit_70scenarios.csv", row.names = FALSE)
 
-# Boxplot of the ~70 adjusted R^2 values (linear y-axis). Saved as PDF.
-p_box = ggplot(r2_df_m4, aes(x = "", y = adjR2)) +
-  geom_boxplot(outlier.alpha = 0.4, width = 0.3) +
+# Histogram of the ~70 adjusted R^2 values (linear x-axis). Saved as PDF.
+p_hist = ggplot(r2_df_m4, aes(x = adjR2)) +
+  geom_histogram(bins = 15, color = "black", fill = "white") +
   theme_bw() + theme_slides +
-  xlab(NULL) + ylab("Adjusted R2")
+  xlab("Adjusted R2") + ylab("Count")
 
-print(p_box)
-ggsave("Result/M4GoodnessOfFit_boxplot.pdf", plot = p_box, width = 8, height = 6)
+print(p_hist)
+ggsave("Result/M4GoodnessOfFit_histogram.pdf", plot = p_hist, width = 8, height = 6)
