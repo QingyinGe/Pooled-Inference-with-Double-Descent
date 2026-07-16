@@ -16,10 +16,11 @@
 ## M4Ridgeless.R. Run with the working directory set to the project root.
 ##
 ## Runs both datasets in turn:
-##   - flu: CDC flu-forecast data, one adjusted R^2 PER SEASON (8 seasons)
-##          -> bar chart
+##   - flu: CDC flu-forecast data, one adjusted R^2 PER SEASON (8 seasons),
+##          computed separately for the 1 wk ahead and 2 wk ahead targets
+##          -> bar chart (1 wk ahead) + printed 1wk-vs-2wk table
 ##   - M4 : M4 competition data, one adjusted R^2 PER SCENARIO (68 monthly
-##          + 2 daily = 70 scenarios) -> boxplot
+##          + 2 daily = 70 scenarios) -> histogram
 ## ============================================================================
 
 library(tidyverse)
@@ -51,6 +52,14 @@ df = fread(csv_path) %>%
                              "target-based-weights",
                              "target-type-based-weights"))
 
+# df = fread(csv_path) %>%
+#   filter(target == "2 wk ahead", location != "US National",
+#          !model_name %in% c("ReichLab_kde", "UTAustin_edm",
+#                             "constant-weights", "equal-weights",
+#                             "target-and-region-based-weights",
+#                             "target-based-weights",
+#                             "target-type-based-weights"))
+
 locations = sort(unique(df$location))
 n_prods = length(locations)          # 10 HHS regions ("products")
 seasons = sort(unique(df$Season))    # 8 flu seasons
@@ -75,16 +84,16 @@ for(season in seasons){
     n_periods = ncol(err_mat), R2 = r2_vec["R2"], adjR2 = r2_vec["adjR2"]
   )
 
-  cat(sprintf("Flu season %s: n_experts=%d n_prods=%d weeks=%d R2=%.4f adjR2=%.4f\n",
+  cat(sprintf("Flu 1 wk ahead season %s: n_experts=%d n_prods=%d weeks=%d R2=%.4f adjR2=%.4f\n",
               season, n_experts, n_prods, ncol(err_mat), r2_vec["R2"], r2_vec["adjR2"]))
+  
+  # cat(sprintf("Flu 2 wk ahead season %s: n_experts=%d n_prods=%d weeks=%d R2=%.4f adjR2=%.4f\n",
+  #             season, n_experts, n_prods, ncol(err_mat), r2_vec["R2"], r2_vec["adjR2"]))
 }
 
 r2_df_flu = do.call(rbind, results)
 rownames(r2_df_flu) = NULL
 r2_df_flu$Season = factor(r2_df_flu$Season, levels = seasons)
-
-save(r2_df_flu, file = "Result/FluGoodnessOfFit_bySeason.RData")
-write.csv(r2_df_flu, "Result/FluGoodnessOfFit_bySeason.csv", row.names = FALSE)
 
 # Bar chart: one adjusted R^2 per season (a boxplot doesn't apply here since
 # there's only a single number per season, not a distribution).
@@ -98,7 +107,6 @@ p_bar = ggplot(r2_df_flu, aes(x = Season, y = adjR2)) +
 
 print(p_bar)
 ggsave("Result/FluGoodnessOfFit_bySeason_bar.pdf", plot = p_bar, width = 9, height = 6)
-
 
 ## ----------------------------------------------------------------------------
 ## M4 dataset
@@ -138,11 +146,11 @@ rownames(r2_df_m4) = NULL
 save(r2_df_m4, file = "Result/M4GoodnessOfFit_70scenarios.RData")
 write.csv(r2_df_m4, "Result/M4GoodnessOfFit_70scenarios.csv", row.names = FALSE)
 
-# Boxplot of the ~70 adjusted R^2 values (linear y-axis). Saved as PDF.
-p_box = ggplot(r2_df_m4, aes(x = "", y = adjR2)) +
-  geom_boxplot(outlier.alpha = 0.4, width = 0.3) +
+# Histogram of the ~70 adjusted R^2 values (linear x-axis). Saved as PDF.
+p_hist = ggplot(r2_df_m4, aes(x = adjR2)) +
+  geom_histogram(bins = 15, color = "black", fill = "white") +
   theme_bw() + theme_slides +
-  xlab(NULL) + ylab("Adjusted R2")
+  xlab("Adjusted R2") + ylab("Count")
 
-print(p_box)
-ggsave("Result/M4GoodnessOfFit_boxplot.pdf", plot = p_box, width = 8, height = 6)
+print(p_hist)
+ggsave("Result/M4GoodnessOfFit_histogram.pdf", plot = p_hist, width = 8, height = 6)
