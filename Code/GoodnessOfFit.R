@@ -62,7 +62,12 @@ if(dataset_type == "flu"){
 
     err_mat = wide %>% dplyr::select(-location, -model_name) %>% as.matrix()
 
+    # computeVarMat() projects each region's n_experts-dim error vector onto
+    # the (n_experts-1)-dim contrast space via Gamma0, then returns the
+    # resulting n_contrasts x n_prods matrix of variances over time.
     var_mat = computeVarMat(err_mat, n_experts, n_prods)
+    # getTWFE_R2() fits log(var_mat) ~ region + contrast and returns that
+    # fit's R^2 and adjusted R^2.
     r2_vec = getTWFE_R2(var_mat)
 
     results[[season]] = data.frame(
@@ -106,6 +111,8 @@ if(dataset_type == "flu"){
     n_scenarios = if(data_freq == "Monthly") 68 else 2
 
     for(rank_idx in 1:n_scenarios){
+      # prepareM4Scenario() builds the block-stacked error matrix for one
+      # scenario: n_prods M4 series, n_experts consecutive rows per series.
       prep = prepareM4Scenario(data_freq, rank_idx, u_data)
       var_mat = computeVarMat(prep$err_mat, n_experts, prep$n_prods)
       r2_vec = getTWFE_R2(var_mat)
