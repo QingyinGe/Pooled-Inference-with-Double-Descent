@@ -9,10 +9,12 @@
 ##
 ## where m indexes "products" (an M4 time series, or an HHS region for flu)
 ## and n indexes one of the (n_experts - 1) orthogonal contrasts among the
-## experts forecasting that product. Helper functions (getTWFE_R2,
-## computeVarMat, prepareFluSeason, prepareM4Scenario, getTimeSeriesNames,
-## getGamma0) live in Code/func.R; this script does the actual per-dataset
-## looping. Run with the working directory set to the project root.
+## experts forecasting that product. Helper functions live in Code/func.R:
+## getTWFE_R2 and computeVarMat are new here; prepareFluData, getTimeSeriesNames,
+## and getGamma0 already existed and are reused as-is; prepareM4Scenario is a
+## new function factoring out the u_comb-building pattern also used inline in
+## M4Ridgeless.R. This script does the actual per-dataset looping. Run with
+## the working directory set to the project root.
 ##
 ## Set `dataset_type` below and run the whole file:
 ##   - "flu": CDC flu-forecast data, one adjusted R^2 PER SEASON (8 seasons)
@@ -26,6 +28,10 @@ library(Matrix)
 library(data.table)
 
 source("Code/func.R")
+
+# theme_slides isn't in func.R (each plotting script defines its own copy,
+# following the convention already used in Code/M4Plot.R).
+theme_slides = theme(text = element_text(size = 15), legend.position = "top")
 
 dataset_type = "flu"   # "flu" or "m4"
 
@@ -51,7 +57,7 @@ if(dataset_type == "flu"){
 
   results = list()
   for(season in seasons){
-    wide = prepareFluSeason(df, season)
+    wide = prepareFluData(df, season)
     n_experts = length(unique(wide$model_name))
 
     err_mat = wide %>% dplyr::select(-location, -model_name) %>% as.matrix()

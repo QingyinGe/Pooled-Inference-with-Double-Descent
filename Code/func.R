@@ -418,10 +418,9 @@ extractNSub <- function(input_string) {
 ##
 ## where m indexes products and n indexes one of the (n_experts - 1)
 ## orthogonal contrasts among the experts forecasting that product (built
-## from Gamma0, see getGamma0() above).
+## from Gamma0, see getGamma0() above). Season-level flu error matrices reuse
+## the existing prepareFluData(); M4 scenario matrices reuse getTimeSeriesNames().
 ## ============================================================================
-
-theme_slides = theme(text = element_text(size = 15), legend.position = "top")
 
 ## Closed-form TWFE R^2 (and adjusted R^2) for a *complete* balanced two-way
 ## grid of variances, var_mat[n, m] (n = 1..n_contrasts contrasts, m = 1..
@@ -477,18 +476,6 @@ computeVarMat = function(err_mat, n_experts, n_prods){
 
   var_vec = colSums(X_mat^2) / n_periods               # var of each contrast-product column
   matrix(var_vec, nrow = n_experts - 1, ncol = n_prods) # reshape: rows = contrasts, cols = products
-}
-
-## Pivot one flu season's forecast errors ("err") to a wide (location, model)
-## x week matrix, rows ordered location-major / model_name-minor so each
-## location's block of n_experts rows is contiguous, as computeVarMat() needs.
-prepareFluSeason = function(df, season){
-  df %>%
-    filter(Season == season) %>%
-    dplyr::select(location, model_name, Model.Week, err) %>%
-    arrange(Model.Week) %>%
-    pivot_wider(names_from = Model.Week, values_from = err) %>%
-    arrange(location, model_name)
 }
 
 ## Build the block-stacked error matrix for one M4 scenario: n_prods products
