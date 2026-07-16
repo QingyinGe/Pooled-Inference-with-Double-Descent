@@ -163,18 +163,28 @@ replaceZeroWOne = function(x_vec){
 }
 
 
-getGamma0 = function(n_experts){
-  root_mat = diag(n_experts) - 1/n_experts #1/n_experts = 1/n_experts * one_vec %*% t(one_vec)
-  
-  Gamma0_raw = root_mat[, 1:(n_experts - 1)]
-  A = t(Gamma0_raw) %*% Gamma0_raw
-  eig = eigen(A)
-  A_inv_half =
-    eig$vectors %*%
-    diag(1 / sqrt(eig$values)) %*%
-    t(eig$vectors)
-  
-  Gamma0 = Gamma0_raw %*% A_inv_half
+getGamma0 = function(n_experts, type = "permute invariant"){
+  if (type == "permute invariant") {
+    root_mat = diag(n_experts) - 1/n_experts #1/n_experts = 1/n_experts * one_vec %*% t(one_vec)
+    
+    Gamma0_raw = root_mat[, 1:(n_experts - 1)]
+    A = t(Gamma0_raw) %*% Gamma0_raw
+    eig = eigen(A)
+    A_inv_half =
+      eig$vectors %*%
+      diag(1 / sqrt(eig$values)) %*%
+      t(eig$vectors)
+    
+    Gamma0 = Gamma0_raw %*% A_inv_half
+  } else {
+    Gamma0 = matrix(0, nrow = n_experts, ncol = n_experts - 1)
+    
+      for(k in 1:(n_experts - 1)){
+        Gamma0[1:k, k] = 1 / sqrt(k * (k + 1))
+        Gamma0[k + 1, k] = -k / sqrt(k * (k + 1))
+      }
+      Gamma0
+  }
 }
 
 getTimeSeriesNames = function(data_freq, rank_idx){
