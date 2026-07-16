@@ -406,3 +406,102 @@ extractNSub <- function(input_string) {
   return(number)
 }
 
+
+## ============================================================================
+## Goodness-of-fit helpers (used by Code/GoodnessOfFit.R for the flu and M4
+## datasets). Tests whether the log-variance of pairwise expert forecast-error
+## contrasts decomposes additively into a "product" effect (an HHS region for
+## flu, an M4 time series for M4) and an "expert-contrast" effect, via a
+## two-way-fixed-effects (TWFE) regression:
+##
+##     log( var(x_{n,m}) ) = grand_mean + row_effect[n] + col_effect[m] + resid
+##
+## where m indexes products and n indexes one of the (n_experts - 1)
+## orthogonal contrasts among the experts forecasting that product (built
+## from Gamma0, see getGamma0() above).
+## ============================================================================
+
+theme_slides = theme(text = element_text(size = 15), legend.position = "top")
+
+## Closed-form TWFE R^2 (and adjusted R^2) for a *complete* balanced two-way
+## grid of variances, var_mat[n, m] (n = 1..n_contrasts contrasts, m = 1..
+## n_prods products). Because the grid is a complete rectangle (every n
+## crossed with every m, no missing cells), this closed form is algebraically
+## identical to lm(log(var_mat) ~ factor(m) + factor(n)).
+getTWFE_R2 = function(var_mat){
+  log_mat = log(var_mat)
+  n_contrasts = nrow(var_mat)
+  n_prods = ncol(var_mat)
+
+  row_means = rowMeans(log_mat)    # per contrast n
+  col_means = colMeans(log_mat)    # per product m
+  grand_mean = mean(log_mat)
+
+  fitted = outer(row_means, col_means, function(r, c) r + c - grand_mean)
+  resid = log_mat - fitted
+
+  ss_tot = sum((log_mat - grand_mean)^2)
+  ss_res = sum(resid^2)
+  r2 = 1 - ss_res / ss_tot
+
+  # n_obs = number of (contrast, product) cells; params = dummy variables for
+  # each factor with one reference level dropped per factor (matches lm()'s
+  # default dummy-coding), plus 1 for the intercept.
+  n_obs = n_prods * n_contrasts
+  n_params = (n_prods - 1) + (n_contrasts - 1)
+  df_resid = n_obs - n_params - 1
+  adj_r2 = 1 - (1 - r2) * (n_obs - 1) / df_resid
+
+  c(R2 = r2, adjR2 = adj_r2)
+}
+
+## Turn a raw forecast-error matrix into the n_contrasts x n_prods variance
+## matrix that getTWFE_R2() needs.
+##
+## err_mat must be laid out as n_prods stacked blocks of n_experts rows each
+## (block m = the n_experts forecast-error time series for product m, in a
+## fixed expert order), with n_periods columns (time). Row order within each
+## block must be consistent across products since Gamma0 is applied per block.
+## No row-centering is applied beforehand: variance is shift-invariant and
+## the column-demean step below already removes any level bias.
+computeVarMat = function(err_mat, n_experts, n_prods){
+  n_periods = ncol(err_mat)
+
+  Gamma0 = getGamma0(n_experts)                             # n_experts x (n_experts-1) contrast basis
+  Gamma = Matrix(diag(n_prods), sparse = TRUE) %x% Gamma0   # block-diagonal, one Gamma0 per product
+
+  # Project each product's n_experts-dim error vector onto the
+  # (n_experts-1)-dim contrast space, for every time period at once.
+  X_mat = as.matrix(t(err_mat) %*% Gamma)              # n_periods x (n_prods * n_contrasts)
+  X_mat = scale(X_mat, center = TRUE, scale = FALSE)   # demean each contrast-product column over time
+
+  var_vec = colSums(X_mat^2) / n_periods               # var of each contrast-product column
+  matrix(var_vec, nrow = n_experts - 1, ncol = n_prods) # reshape: rows = contrasts, cols = products
+}
+
+## Pivot one flu season's forecast errors ("err") to a wide (location, model)
+## x week matrix, rows ordered location-major / model_name-minor so each
+## location's block of n_experts rows is contiguous, as computeVarMat() needs.
+prepareFluSeason = function(df, season){
+  df %>%
+    filter(Season == season) %>%
+    dplyr::select(location, model_name, Model.Week, err) %>%
+    arrange(Model.Week) %>%
+    pivot_wider(names_from = Model.Week, values_from = err) %>%
+    arrange(location, model_name)
+}
+
+## Build the block-stacked error matrix for one M4 scenario: n_prods products
+## (M4 series), n_experts consecutive rows per product, n_periods
+## forecast-horizon columns (F2, F3, ... in the err file).
+prepareM4Scenario = function(data_freq, rank_idx, u_data){
+  ids = getTimeSeriesNames(data_freq, rank_idx)
+  n_prods = length(ids)
+  err_mat = as.matrix(
+    u_data %>% filter(id %in% ids) %>%
+      arrange(as.numeric(gsub("\\D", "", id))) %>%
+      dplyr::select(-id, -group_id)
+  )
+  list(err_mat = err_mat, n_prods = n_prods)
+}
+
