@@ -69,7 +69,7 @@ for(i in 1:length(rank_vec)){
   # P:Ridge0+ ---------------------------------------------------------------
   Y_mat = t(apply(u_comb, 2, function(x) sumEachProd(x, n_prods, n_experts)/n_experts))
   
-  Gamma0 = getGamma0(n_experts)
+  Gamma0 = getGamma0(n_experts, type = "sequential difference")
   Gamma = Matrix(diag(n_prods), sparse = TRUE) %x% Gamma0
   
   X_mat = as.matrix(t(u_comb) %*% Gamma)
@@ -162,7 +162,7 @@ for(i in 1:length(rank_vec)){
   # P:Ridge0+ ---------------------------------------------------------------
   Y_mat = t(apply(u_comb, 2, function(x) sumEachProd(x, n_prods, n_experts)/n_experts))
   
-  Gamma0 = getGamma0(n_experts)
+  Gamma0 = getGamma0(n_experts, type = "sequential difference")
   Gamma = Matrix(diag(n_prods), sparse = TRUE) %x% Gamma0
   
   X_mat = as.matrix(t(u_comb) %*% Gamma)
@@ -252,7 +252,7 @@ for(i in 1:length(rank_vec)){
   # P:Ridge0+ ---------------------------------------------------------------
   Y_mat = t(apply(u_comb, 2, function(x) sumEachProd(x, n_prods, n_experts)/n_experts))
   
-  Gamma0 = getGamma0(n_experts)
+  Gamma0 = getGamma0(n_experts, type = "sequential difference")
   Gamma = Matrix(diag(n_prods), sparse = TRUE) %x% Gamma0
   
   X_mat = as.matrix(t(u_comb) %*% Gamma)
