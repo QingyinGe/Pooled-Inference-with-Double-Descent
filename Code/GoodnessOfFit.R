@@ -65,6 +65,11 @@ r2_df_flu = do.call(rbind, results)
 rownames(r2_df_flu) = NULL
 r2_df_flu$Season = factor(r2_df_flu$Season, levels = seasons)
 
+save(r2_df_flu, file = "Result/FluGoodnessOfFit_bySeason_1wk.RData")
+write.csv(r2_df_flu, "Result/FluGoodnessOfFit_bySeason_1wk.csv", row.names = FALSE)
+# save(r2_df_flu, file = "Result/FluGoodnessOfFit_bySeason_2wk.RData")
+# write.csv(r2_df_flu, "Result/FluGoodnessOfFit_bySeason_2wk.csv", row.names = FALSE)
+
 
 ## ----------------------------------------------------------------------------
 ## M4 dataset
