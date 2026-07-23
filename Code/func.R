@@ -419,8 +419,8 @@ extractNSub <- function(input_string) {
 
 getTWFE_R2 = function(var_mat){
   log_mat = log(var_mat)
-  n_contrasts = nrow(var_mat)
-  n_prods = ncol(var_mat)
+  n_contrasts = nrow(var_mat) ## N-1
+  n_prods = ncol(var_mat) ## M
 
   row_means = rowMeans(log_mat)
   col_means = colMeans(log_mat)
